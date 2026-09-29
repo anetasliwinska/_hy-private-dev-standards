@@ -43,6 +43,7 @@ Fallback string wpisany na sztywno w warstwie mapującej dane, generyczny komuni
 - Jawne sprawdzenia `null`/`undefined` zamiast `@ts-ignore`; optional chaining; operator `!` tylko gdy naprawdę pewne.
 - Rzutowania typów oszczędnie i tylko uzasadnione (dostęp do DOM, walidacja danych zewnętrznych) — nigdy jako ucieczka od błędu typów.
 - Wykorzystuj wbudowane utility types (`Partial`, `Required`, `Pick`, `Omit`, `Readonly`, `Record`) zamiast redefiniować te same wzorce ręcznie.
+- **Odczyt generycznego `Record<string, T>` przez klucz typu `keyof T & string` nadal zawęża się do `T | undefined` pod flagą typu `noUncheckedIndexedAccess`, gdy `T` samo jest parametrem generycznym.** Kompilator nie zna konkretnego zbioru kluczy generyku, więc traktuje odczyt jako potencjalnie pusty, mimo że klucz jest już statycznie sprawdzony jako poprawny. Wzorce `&&`/`||` do wyboru samego klucza (`code && map[code]) || fallback`) dodatkowo przeciekają `string | undefined` z gałęzi fallbacku. Działające rozwiązanie: jawny ternary bez `&&`/`||` do wyboru klucza, plus jeden, wąski, udokumentowany `as` na samym końcu, tylko przy właściwym odczycie wartości — nie szerszy cast obejmujący całą funkcję.
 
 ## 3. Komponenty i hooki React
 
@@ -162,6 +163,7 @@ Fallback string wpisany na sztywno w warstwie mapującej dane, generyczny komuni
 - **Komunikaty błędów mają być przyjazne, nie techniczny żargon** — nie pokazuj kodów błędów sieciowych ani stack trace'ów; tłumacz na język zrozumiały dla użytkownika i, gdy to możliwe, dawaj kolejny krok (przycisk ponów, link do wsparcia), nie zostawiaj samego "wystąpił błąd".
 - Graceful degradation dla brakujących opcjonalnych danych — optional chaining zamiast zakładania, że pole istnieje; fallback content zamiast pustego miejsca.
 - **`catch` w kodzie klienta, który zbiera różne przyczyny w jeden definitywny komunikat, mimo że część z nich nigdy nie dotarła do serwera, jest błędem obserwowalności, nie tylko UX-u.** Sprawdź, czy poziom logowania jest właściwy: decyzja podjęta po stronie serwera powinna się logować po stronie serwera, nie ginąć w jednym uchwyceniu błędu na froncie.
+- **Nieudana próba asynchronicznego załadowania danych nie powinna być cache'owana jako pusty, "udany" wynik (np. `setData([])` w `catch`).** Zostaw stan nietkniętym/`undefined`, żeby kolejna próba (kolejne otwarcie dialogu, kolejne zamontowanie) sama spróbowała jeszcze raz — zamiast utknąć trwale na jednej nieudanej próbie, bo stan wygląda na "już pobrany, po prostu pusty".
 
 ## 11. GraphQL na poziomie protokołu
 

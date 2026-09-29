@@ -20,6 +20,7 @@
 - **Rozszerzanie istniejącej integracji: dziedziczenie/kompozycja nad wspólną abstrakcją, nie równoległy, zduplikowany moduł.** Duplikacja prowadzi do rozjazdu implementacji w czasie. Jeśli abstrakcja bazowa nie pozwala się rozszerzyć w potrzebny sposób — to sygnał do dyskusji o zmianie samej abstrakcji, nie do tworzenia obejścia.
 - **Moduł eksportuje na zewnątrz tylko to, co faktycznie jest potrzebne innym modułom** — minimalizuj powierzchnię eksponowaną, żeby zredukować sprzężenie. Jeden moduł, jedna dobrze zdefiniowana odpowiedzialność domenowa.
 - Jeśli istnieje generator/szkielet do powtarzalnej struktury (nowy moduł, nowa integracja) — użyj go zamiast ręcznego kopiowania innego modułu "jako wzorca". Ręczne kopiowanie pomija ukryte kroki konfiguracyjne i jest częstym źródłem cichych błędów produkcyjnych (komponent zarejestrowany w czterech miejscach z pięciu wymaganych — nic nie krzyczy, po prostu nie działa w runtime).
+- **Gdy dwie niezależnie utrzymywane listy dozwolonych wartości w różnych systemach muszą się ze sobą zgadzać (np. lista ról w konfiguracji jednego systemu i lista akceptowana przez drugi), a nie da się ich zmienić atomowo naraz — zawężaj stronę bardziej pozwalającą, nigdy nie poszerzaj strony bardziej restrykcyjnej.** Rozjazd dwóch takich list nie ujawnia się przy wdrożeniu ani w typowym użyciu — dopiero przy pierwszym przypadku, który jedna lista akceptuje, a druga odrzuca (albo odwrotnie: akceptuje po stronie A, ale zostaje po cichu odrzucony przez B przy zapisie). Zawężenie strony pozwalającej jest bezpieczne z definicji (nigdy nie dopuści czegoś, co i tak zostałoby odrzucone dalej); poszerzenie strony restrykcyjnej wymaga świadomej decyzji o tym, co faktycznie ma być dozwolone.
 
 ## 2. Modelowanie danych i mappery
 
@@ -34,6 +35,7 @@
 - Rozróżniaj konsekwentnie "brak wartości" od "wartości pustej" w całym systemie (jedna konwencja) — niespójność jest źródłem błędów trudnych do wyśledzenia.
 - Warstwa prezentacji/konsument importuje modele przez oficjalny, publiczny punkt wejścia warstwy backendowej — nigdy nie sięga bezpośrednio do wewnętrznych plików modelu integracji. Zapobiega to przenikaniu detali implementacyjnych konkretnego dostawcy do kodu klienckiego.
 - Testuj mappery jako osobną, izolowaną jednostkę (happy path + brakujące opcjonalne pola) — niezależnie od testowania samej integracji.
+- **Diffowanie historii/dziennika zmian po oknie stronicowanym (np. "30 ostatnich wersji") potrzebuje jednego rekordu więcej niż to, co faktycznie wyświetlasz — wyłącznie do zasiania stanu "poprzedni".** Bez tego najstarszy pobrany rekord w oknie jest domyślnie traktowany jako "brak wcześniejszego stanu", co fabrykuje fałszywe zdarzenie inicjalne ("było puste → X") za każdym razem, gdy realna historia sięga dalej wstecz niż okno pobierania. Rekord-zaczyn służy wyłącznie do porównania z pierwszym realnie wyświetlanym wpisem i nigdy sam nie jest emitowany jako zdarzenie.
 
 ## 3. Walidacja wejścia
 
