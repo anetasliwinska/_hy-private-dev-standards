@@ -70,6 +70,7 @@ Fallback string wpisany na sztywno w warstwie mapującej dane, generyczny komuni
 - Interpolacja treści z placeholderami w string renderowana jako elementy React — użyj do tego gotowej, przetestowanej biblioteki (np. odpowiednik `react-string-replace`), nie ręcznego `string.replace()` połączonego z `dangerouslySetInnerHTML`.
 - Stałe modułowe (mapy statusów, maksymalne rozmiary, wzorce regex, opcje sortowania) definiuj na poziomie modułu, nie wewnątrz funkcji komponentu — inaczej są realokowane przy każdym renderze.
 - **Własny renderer na kolumnie/polu, które bywa `null` lub `undefined`, może się nigdy nie wykonać, jeśli wspólny mechanizm renderowania robi wczesny zwrot dla pustej wartości przed dotarciem do Twojej gałęzi.** Jeśli jesteś pierwszym miejscem w kodzie, które nakłada niestandardowy renderer na pole mogące być puste, to jest decyzja do podjęcia jawnie (naprawić wspólny mechanizm dla wszystkich konsumentów vs obejść lokalnie), nie coś do cichego obejścia.
+- **Gdy dwa niezależne komponenty/hooki duplikują dokładnie ten sam mechanizm integracji z zewnętrzną biblioteką** (np. czytanie sesji, nasłuch zdarzeń, adapter do SDK) **zamiast jeden konsumować drugi — to osobny przypadek DRY od zduplikowanej logiki domenowej.** Konsolidacja do jednego źródła prawdy tutaj nie tylko skraca kod, ale **zmniejsza liczbę miejsc, które w ogóle wiedzą o tej zależności** — to zmiana jakościowa, nie tylko kosmetyczna, bo każde kolejne miejsce znające zewnętrzną bibliotekę to kolejne miejsce, które trzeba zmienić przy jej wymianie albo aktualizacji.
 
 ## 4. Next.js: server/client/Suspense
 
@@ -246,6 +247,7 @@ Reguły niezależne od konkretnego dostawcy GraphQL — dotyczą każdej integra
 - Aktualizuj w małych, powiązanych partiach, nie wszystko naraz — łatwiej zidentyfikować przyczynę problemu. Czytaj changelog/migration guide przed aktualizacją major wersji.
 - Regularne audyty bezpieczeństwa zależności; szybkie łatanie krytycznych podatności; commituj plik lock — zapewnia spójność wersji między środowiskami.
 - W monorepo: wersje wewnętrznych pakietów jako referencja do najnowszej (nie sztywno przypięte), świadoma kolejność budowania między pakietami zależnymi.
+- **Jeśli projekt wendoruje (trzyma w repo jako śledzoną kopię) zewnętrzny pakiet, żeby móc go kiedyś zsynchronizować z nowszą wersją oryginału — nie dokładaj do niego plików bez odpowiednika w oryginale.** Nawet drobna, osobna funkcja w takim miejscu staje się stałym źródłem konfliktu przy każdym przyszłym podciąganiu forka, bo po stronie oryginału nie ma z czym jej scalić. Trzymaj projekt-specyficzny kod w osobnym, dedykowanym pakiecie obok — tak żeby zwendorowana kopia zostawała możliwie czystym lustrem oryginału.
 
 ## 17. Bezpieczeństwo frontendowe
 
